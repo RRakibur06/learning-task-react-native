@@ -1,5 +1,3 @@
-// App.jsx
-
 import React from 'react';
 import { StatusBar, StyleSheet, useColorScheme } from 'react-native';
 import {
@@ -10,9 +8,9 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 
 import HomeScreen from './screens/Home/HomeScreen';
-import Practice from './practice/Practice';
-import PracticeTwo from './practice/PracticeTwo';
-import PracticeThree from './practice/PracticeThree';
+import Practice from './screens/practice/Practice';
+import PracticeTwo from './screens/practice/PracticeTwo';
+import PracticeThree from './screens/practice/PracticeThree';
 
 const Stack = createStackNavigator();
 

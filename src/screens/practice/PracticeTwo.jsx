@@ -1,6 +1,6 @@
 
 import { Text, StyleSheet, View, SectionList, SafeAreaView, } from 'react-native';
-import { sectionsData } from '../data';
+import { sectionsData } from '../../data';
 
 
 export default function PracticeTwo() {
