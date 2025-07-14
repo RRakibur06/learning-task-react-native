@@ -2,9 +2,18 @@ import React from 'react';
 import { SafeAreaView, View, Text, FlatList, Image, StyleSheet, TouchableOpacity, Button } from 'react-native';
 import { products } from '../../data';
 import { useNavigation } from '@react-navigation/native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+const SESSION_KEY = '@logged_in_user';
 
 const HomeScreen = () => {
     const navigation = useNavigation();
+
+    const handleLogout = async () => {
+        await AsyncStorage.removeItem(SESSION_KEY);
+        navigation.replace('SignIn');
+    };
+
 
     const renderItem = ({ item }) => (
         <TouchableOpacity style={styles.card}>
@@ -24,7 +33,15 @@ const HomeScreen = () => {
 
     return (
         <SafeAreaView style={styles.safeArea}>
-            <Text style={styles.heading}>ShopApp</Text>
+            <View style={styles.header}>
+                <Text style={styles.heading}>ShopApp</Text>
+                <TouchableOpacity
+                    style={styles.logOutButton}
+                    onPress={handleLogout}
+                >
+                    <Text style={styles.buttonText}>Log Out</Text>
+                </TouchableOpacity>
+            </View>
             <FlatList
                 data={products}
                 renderItem={renderItem}
@@ -71,7 +88,6 @@ const styles = StyleSheet.create({
     heading: {
         fontSize: 28,
         fontWeight: '700',
-        marginBottom: 12,
         color: '#333',
         margin: 'auto'
     },
@@ -129,5 +145,15 @@ const styles = StyleSheet.create({
         color: '#fff',
         fontWeight: '600',
     },
-
+    header: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 20
+    },
+    logOutButton: {
+        backgroundColor: '#e76f51',
+        padding: 10,
+        borderRadius: 5,
+    },
 });

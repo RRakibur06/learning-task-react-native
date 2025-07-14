@@ -11,6 +11,8 @@ import HomeScreen from './screens/Home/HomeScreen';
 import Practice from './screens/practice/Practice';
 import PracticeTwo from './screens/practice/PracticeTwo';
 import PracticeThree from './screens/practice/PracticeThree';
+import SignInScreen from './screens/Auth/SignInScreen';
+import SignUpScreen from './screens/Auth/SignUpScreen';
 
 const Stack = createStackNavigator();
 
@@ -30,12 +32,23 @@ export default function App() {
 
         <NavigationContainer>
           <Stack.Navigator
-            initialRouteName="Home"
+            initialRouteName="SignIn"
             screenOptions={{
               headerStyle: { backgroundColor },
               headerTintColor: isDarkMode ? '#fff' : '#000'
             }}
           >
+            <Stack.Screen
+              name="SignIn"
+              component={SignInScreen}
+              options={{ title: 'Sign In' }}
+            />
+            <Stack.Screen
+              name="SignUp"
+              component={SignUpScreen}
+              options={{ title: 'Sign Up' }}
+            />
+
             <Stack.Screen
               name="Home"
               component={HomeScreen}
