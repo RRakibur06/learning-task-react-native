@@ -1,6 +1,6 @@
 import React from 'react';
 import { SafeAreaView, View, Text, FlatList, Image, StyleSheet, TouchableOpacity, Button } from 'react-native';
-import { products } from '../../data';
+import { products } from '../../utils/data';
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -23,9 +23,9 @@ const HomeScreen = () => {
                 <Text style={styles.price}>${item.price.toFixed(2)}</Text>
                 <Button
                     style={styles.button}
-                    onPress={() => alert(`You clicked on ${item.name}`)}
+                    onPress={() => navigation.navigate('ProductDetails', { product: item })}
                     title="Purchase"
-                    accessibilityLabel="Learn more about this purple button"
+                    accessibilityLabel="Buy this item"
                 />
             </View>
         </TouchableOpacity>
@@ -51,7 +51,7 @@ const HomeScreen = () => {
                 showsVerticalScrollIndicator={false}
             />
 
-            <TouchableOpacity
+            {/* <TouchableOpacity
                 style={styles.customButton}
                 onPress={() => navigation.navigate('Practice')}
             >
@@ -70,7 +70,7 @@ const HomeScreen = () => {
                 onPress={() => navigation.navigate('PracticeThree')}
             >
                 <Text style={styles.buttonText}>Redirect to practice screen Three</Text>
-            </TouchableOpacity>
+            </TouchableOpacity> */}
         </SafeAreaView>
     );
 };

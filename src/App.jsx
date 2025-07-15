@@ -8,11 +8,12 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 
 import HomeScreen from './screens/Home/HomeScreen';
-import Practice from './screens/practice/Practice';
-import PracticeTwo from './screens/practice/PracticeTwo';
-import PracticeThree from './screens/practice/PracticeThree';
+import Practice from './screens/Practice/Practice';
+import PracticeTwo from './screens/Practice/PracticeTwo';
+import PracticeThree from './screens/Practice/PracticeThree';
 import SignInScreen from './screens/Auth/SignInScreen';
 import SignUpScreen from './screens/Auth/SignUpScreen';
+import ProductDetailsScreen from './screens/Product/ProductDetailsScreen';
 
 const Stack = createStackNavigator();
 
@@ -54,6 +55,12 @@ export default function App() {
               component={HomeScreen}
               options={{ headerShown: false }}
             />
+            <Stack.Screen
+              name="ProductDetails"
+              component={ProductDetailsScreen}
+              options={{ title: 'Product Details' }}
+            />
+
             <Stack.Screen
               name="Practice"
               component={Practice}
