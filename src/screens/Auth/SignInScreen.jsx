@@ -1,39 +1,34 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, Alert, Platform, KeyboardAvoidingView, TouchableWithoutFeedback, Keyboard, ScrollView, ActivityIndicator } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
-
 import InputField from '../../components/InputField';
 import PrimaryButton from '../../components/PrimaryButton';
-
-const SIGNUP_KEY = '@user_credentials';
-const SESSION_KEY = '@logged_in_user';
+import { signIn } from '../../api/api';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function SignInScreen() {
-    const [username, setUsername] = useState('');
+    const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-    const [storedUser, setStoredUser] = useState(null);
     const [loading, setLoading] = useState(true);
     const [errors, setErrors] = useState({});
     const navigation = useNavigation();
 
     useEffect(() => {
-        AsyncStorage.getItem(SESSION_KEY)
-            .then(sessionJson => {
-                if (sessionJson) {
+        async function checkToken() {
+            try {
+                const token = await AsyncStorage.getItem('@access_token');
+                if (token) {
                     navigation.replace('Home');
                 } else {
-                    return AsyncStorage.getItem(SIGNUP_KEY);
+                    setLoading(false);
                 }
-            })
-            .then(signupJson => {
-                if (signupJson) {
-                    setStoredUser(JSON.parse(signupJson));
-                }
-            })
-            .catch(console.error)
-            .finally(() => setLoading(false));
+            } catch {
+                setLoading(false);
+            }
+        }
+        checkToken();
     }, [navigation]);
+
 
     if (loading) {
         return (
@@ -46,8 +41,9 @@ export default function SignInScreen() {
     const validate = () => {
         const e = {};
         let valid = true;
-        if (!username.trim()) { e.username = 'Required'; valid = false; }
-        if (password.length < 6) { e.password = 'Min 6 characters'; valid = false; }
+
+        if (!email.trim()) { e.email = 'Email is required'; valid = false; }
+        if (!password.trim()) { e.password = 'Password is required'; valid = false; }
         setErrors(e);
         return valid;
     };
@@ -55,26 +51,12 @@ export default function SignInScreen() {
     const handleSignIn = async () => {
         if (!validate()) return;
 
-        if (!storedUser) {
-            return Alert.alert('No account', 'Please sign up first');
-        }
-
-        const match =
-            username === storedUser.username &&
-            password === storedUser.password;
-
-        if (!match) {
-            return Alert.alert('Invalid', 'Username or password is incorrect');
-        }
-
         try {
-            const session = JSON.stringify({
-                username: storedUser.username,
-            });
-            await AsyncStorage.setItem(SESSION_KEY, session);
+            await signIn({ email, password });
             navigation.replace('Home');
-        } catch {
-            Alert.alert('Error', 'Could not create session');
+        } catch (err) {
+            const msg = err.response?.data?.message || err.message;
+            Alert.alert('Login Failed', msg);
         }
     };
 
@@ -91,11 +73,11 @@ export default function SignInScreen() {
                 >
                     <View style={styles.form}>
                         <InputField
-                            label="Username"
-                            value={username}
-                            onChangeText={setUsername}
-                            placeholder="Enter your username"
-                            error={errors.username}
+                            label="Email"
+                            value={email}
+                            onChangeText={setEmail}
+                            placeholder="Enter your email"
+                            error={errors.email}
                         />
 
                         <InputField

@@ -1,16 +1,25 @@
 import React, { useState } from 'react';
-import { StyleSheet, Alert, Platform, KeyboardAvoidingView, TouchableWithoutFeedback, Keyboard, View } from 'react-native';
+import {
+    StyleSheet,
+    Alert,
+    Platform,
+    KeyboardAvoidingView,
+    TouchableWithoutFeedback,
+    Keyboard,
+    View
+} from 'react-native';
 import { ScrollView } from 'react-native-gesture-handler';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import InputField from '../../components/InputField';
-import DropDown from '../../components/DropDown';
-import PrimaryButton from '../../components/PrimaryButton';
 import { useNavigation } from '@react-navigation/native';
 
+import InputField from '../../components/InputField';
+import PrimaryButton from '../../components/PrimaryButton';
+import { signUp } from '../../api/api';
+
+
 export default function SignUpScreen() {
-    const [username, setUsername] = useState('');
+    const [name, setName] = useState('');
+    const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-    const [role, setRole] = useState(null);
     const [errors, setErrors] = useState({});
     const navigation = useNavigation();
 
@@ -18,9 +27,12 @@ export default function SignUpScreen() {
         const e = {};
         let valid = true;
 
-        if (!username.trim()) { e.username = 'Username is required'; valid = false; }
+        if (!name.trim()) { e.name = 'Name is required'; valid = false; }
+        if (!email.trim()) { e.email = 'Email is required'; valid = false; }
+        else if (!/^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/.test(email)) {
+            e.email = 'Email is invalid'; valid = false;
+        }
         if (password.length < 6) { e.password = 'Min 6 characters'; valid = false; }
-        if (!role) { e.role = 'Please select a role'; valid = false; }
 
         setErrors(e);
         return valid;
@@ -30,11 +42,15 @@ export default function SignUpScreen() {
         if (!validate()) return;
 
         try {
-            const user = JSON.stringify({ username, password, role });
-            await AsyncStorage.setItem('@user_credentials', user);
-            navigation.replace('SignIn');
-        } catch {
-            Alert.alert('Error', 'Failed to save user');
+            await signUp({ name, email, password });
+            Alert.alert(
+                'Success',
+                'Account created! Please log in.',
+                [{ text: 'OK', onPress: () => navigation.replace('SignIn') }]
+            );
+        } catch (err) {
+            const msg = err.response?.data?.message || err.message;
+            Alert.alert('Sign Up Failed', msg);
         }
     };
 
@@ -51,11 +67,19 @@ export default function SignUpScreen() {
                 >
                     <View style={styles.form}>
                         <InputField
-                            label="Username"
-                            value={username}
-                            onChangeText={setUsername}
-                            placeholder="Enter your username"
-                            error={errors.username}
+                            label="Name"
+                            value={name}
+                            onChangeText={setName}
+                            placeholder="Enter your full name"
+                            error={errors.name}
+                        />
+
+                        <InputField
+                            label="Email"
+                            value={email}
+                            onChangeText={setEmail}
+                            placeholder="Enter your email"
+                            error={errors.email}
                         />
 
                         <InputField
@@ -67,21 +91,7 @@ export default function SignUpScreen() {
                             error={errors.password}
                         />
 
-                        <DropDown
-                            label="Role"
-                            items={[
-                                { label: 'Seller', value: 'Seller' },
-                                { label: 'Buyer', value: 'Buyer' }
-                            ]}
-                            value={role}
-                            onValueChange={setRole}
-                            error={errors.role}
-                        />
-
-                        <PrimaryButton
-                            title="Sign Up"
-                            onPress={handleSignUp}
-                        />
+                        <PrimaryButton title="Sign Up" onPress={handleSignUp} />
                     </View>
                 </ScrollView>
             </TouchableWithoutFeedback>
@@ -90,17 +100,7 @@ export default function SignUpScreen() {
 }
 
 const styles = StyleSheet.create({
-    flex: {
-        flex: 1
-    },
-
-    container: {
-        flexGrow: 1,
-        padding: 16
-    },
-
-    form: {
-        flex: 1,
-        justifyContent: 'center'
-    }
+    flex: { flex: 1 },
+    container: { flexGrow: 1, padding: 16 },
+    form: { flex: 1, justifyContent: 'center' }
 });

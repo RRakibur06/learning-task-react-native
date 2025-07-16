@@ -1,159 +1,89 @@
-import React from 'react';
-import { SafeAreaView, View, Text, FlatList, Image, StyleSheet, TouchableOpacity, Button } from 'react-native';
-import { products } from '../../utils/data';
-import { useNavigation } from '@react-navigation/native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import React, { useState, useEffect } from 'react';
+import {
+    View,
+    FlatList,
+    ActivityIndicator,
+    Text,
+    StyleSheet,
+    TouchableOpacity,
+    Image
+} from 'react-native';
+import api from '../../api/api';
+import Header from '../../components/Header';
 
-const SESSION_KEY = '@logged_in_user';
+export default function HomeScreen({ navigation }) {
+    const [products, setProducts] = useState([]);
+    const [loading, setLoading] = useState(true);
 
-const HomeScreen = () => {
-    const navigation = useNavigation();
-
-    const handleLogout = async () => {
-        await AsyncStorage.removeItem(SESSION_KEY);
-        navigation.replace('SignIn');
-    };
-
+    useEffect(() => {
+        api.get('/products')
+            .then(res => {
+                if (res.data.success) {
+                    setProducts(res.data.data);
+                } else {
+                    console.warn('Failed to load products');
+                }
+            })
+            .catch(err => console.error(err))
+            .finally(() => setLoading(false));
+    }, []);
 
     const renderItem = ({ item }) => (
-        <TouchableOpacity style={styles.card}>
-            <Image source={{ uri: item.image }} style={styles.productImage} />
-            <View style={styles.infoContainer}>
-                <Text style={styles.name}>{item.name}</Text>
-                <Text style={styles.price}>${item.price.toFixed(2)}</Text>
-                <Button
-                    style={styles.button}
-                    onPress={() => navigation.navigate('ProductDetails', { product: item })}
-                    title="Purchase"
-                    accessibilityLabel="Buy this item"
-                />
-            </View>
+        <TouchableOpacity
+            style={styles.card}
+            onPress={() =>
+                navigation.navigate('ProductDetails', { product: item })
+            }
+        >
+            <Image source={{ uri: item.image }} style={styles.image} />
+            <Text style={styles.name}>{item.name}</Text>
+            <Text style={styles.price}>${item.price.toFixed(2)}</Text>
         </TouchableOpacity>
     );
 
-    return (
-        <SafeAreaView style={styles.safeArea}>
-            <View style={styles.header}>
-                <Text style={styles.heading}>ShopApp</Text>
-                <TouchableOpacity
-                    style={styles.logOutButton}
-                    onPress={handleLogout}
-                >
-                    <Text style={styles.buttonText}>Log Out</Text>
-                </TouchableOpacity>
+    if (loading) {
+        return (
+            <View style={styles.loader}>
+                <ActivityIndicator size="large" color="#2a9d8f" />
             </View>
-            <FlatList
-                data={products}
-                renderItem={renderItem}
-                keyExtractor={item => item.id}
-                numColumns={2}
-                contentContainerStyle={styles.listContainer}
-                showsVerticalScrollIndicator={false}
-            />
+        );
+    }
 
-            {/* <TouchableOpacity
-                style={styles.customButton}
-                onPress={() => navigation.navigate('Practice')}
-            >
-                <Text style={styles.buttonText}>Redirect to practice screen One</Text>
-            </TouchableOpacity>
+    return (
+        <View style={styles.container}>
+            <Header />
 
-            <TouchableOpacity
-                style={styles.customButton}
-                onPress={() => navigation.navigate('PracticeTwo')}
-            >
-                <Text style={styles.buttonText}>Redirect to practice screen Two</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-                style={styles.customButton}
-                onPress={() => navigation.navigate('PracticeThree')}
-            >
-                <Text style={styles.buttonText}>Redirect to practice screen Three</Text>
-            </TouchableOpacity> */}
-        </SafeAreaView>
+            {products.length === 0 ? (
+                <Text style={styles.empty}>No products found.</Text>
+            ) : (
+                <FlatList
+                    data={products}
+                    keyExtractor={item => item._id}
+                    renderItem={renderItem}
+                    numColumns={2}
+                    contentContainerStyle={styles.list}
+                />
+            )}
+        </View>
     );
-};
-
-export default HomeScreen;
+}
 
 const styles = StyleSheet.create({
-    safeArea: {
-        flex: 1,
-        backgroundColor: '#fff',
-        paddingHorizontal: 16,
-        paddingTop: 16
-    },
-
-    heading: {
-        fontSize: 28,
-        fontWeight: '700',
-        color: '#333',
-        margin: 'auto'
-    },
-
-    listContainer: {
-        paddingBottom: 16
-    },
-
+    container: { flex: 1, backgroundColor: '#f7f7f7' },
+    loader: { flex: 1, justifyContent: 'center' },
+    empty: { textAlign: 'center', marginTop: 20, color: '#666' },
+    list: { padding: 8 },
     card: {
         flex: 1,
-        margin: 5,
+        margin: 8,
         backgroundColor: '#fff',
         borderRadius: 8,
         overflow: 'hidden',
-        elevation: 3,
-        shadowColor: '#000',
-        shadowOpacity: 0.1,
-        shadowRadius: 4
-    },
-
-    productImage: {
-        width: '100%',
-        height: 120,
-        backgroundColor: 'lightgrey',
-        // borderWidth: 1,
-        // borderColor: 'red',
-    },
-
-    infoContainer: {
-        padding: 10,
-        flexDirection: 'column',
-        justifyContent: 'space-between'
-    },
-
-    name: {
-        fontSize: 14,
-        marginBottom: 6
-    },
-
-    price: {
-        fontSize: 16,
-        fontWeight: '600',
-        color: '#2a9d8f'
-    },
-    customButton: {
-        marginVertical: 10,
-        backgroundColor: '#2a9d8f',
-        width: '80%',
-        paddingVertical: 12,
-        borderRadius: 8,
+        elevation: 2,
         alignItems: 'center',
-        margin: 'auto',
+        padding: 12
     },
-    buttonText: {
-        color: '#fff',
-        fontWeight: '600',
-    },
-    header: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: 20
-    },
-    logOutButton: {
-        backgroundColor: '#e76f51',
-        padding: 10,
-        borderRadius: 5,
-    },
+    image: { width: 100, height: 100, marginBottom: 8 },
+    name: { fontSize: 14, fontWeight: '500', marginBottom: 4 },
+    price: { fontSize: 16, color: '#2a9d8f' }
 });

@@ -1,8 +1,34 @@
-import React from 'react';
-import { View, Text, Image, StyleSheet } from 'react-native';
+import React, { useState } from 'react';
+import {
+    View,
+    Text,
+    Image,
+    StyleSheet,
+    Button,
+    ActivityIndicator,
+    Alert
+} from 'react-native';
+import { useCart } from '../context/CartContext';
 
 export default function ProductDetails({ product }) {
-    const { name, price, image, description } = product;
+    const { name, price, image, description, _id } = product;
+    const { addToCart } = useCart();
+    const [adding, setAdding] = useState(false);
+
+    const handleAdd = async () => {
+        setAdding(true);
+        try {
+            // call your context API which in turn calls the backend
+            await addToCart(_id, 1);
+            // on success, CartIcon badge will update via context subscription
+        } catch (err) {
+            // show any error returned from your API
+            const msg = err.response?.data?.message || err.message;
+            Alert.alert('Couldn’t add to cart', msg);
+        } finally {
+            setAdding(false);
+        }
+    };
 
     return (
         <View style={styles.container}>
@@ -14,37 +40,19 @@ export default function ProductDetails({ product }) {
             {description && (
                 <Text style={styles.description}>{description}</Text>
             )}
+
+            {adding
+                ? <ActivityIndicator size="large" color="#2a9d8f" />
+                : <Button title="Add to Cart" onPress={handleAdd} />
+            }
         </View>
     );
 }
 
 const styles = StyleSheet.create({
-    container: {
-        padding: 16,
-        alignItems: 'center',
-        backgroundColor: '#fff',
-    },
-    image: {
-        width: 250,
-        height: 250,
-        borderRadius: 8,
-        marginBottom: 16,
-        backgroundColor: '#eee'
-    },
-    name: {
-        fontSize: 22,
-        fontWeight: '700',
-        marginBottom: 8,
-        textAlign: 'center'
-    },
-    price: {
-        fontSize: 20,
-        color: '#2a9d8f',
-        marginBottom: 12
-    },
-    description: {
-        fontSize: 16,
-        color: '#555',
-        textAlign: 'center'
-    }
+    container: { padding: 16, alignItems: 'center', backgroundColor: '#fff' },
+    image: { width: 250, height: 250, borderRadius: 8, marginBottom: 16, backgroundColor: '#eee' },
+    name: { fontSize: 22, fontWeight: '700', marginBottom: 8, textAlign: 'center' },
+    price: { fontSize: 20, color: '#2a9d8f', marginBottom: 12 },
+    description: { fontSize: 16, color: '#555', textAlign: 'center' }
 });
