@@ -1,58 +1,40 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Alert, Platform, KeyboardAvoidingView, TouchableWithoutFeedback, Keyboard, ScrollView, ActivityIndicator } from 'react-native';
+import React from 'react';
+import {
+    View,
+    Text,
+    Alert,
+    KeyboardAvoidingView,
+    TouchableWithoutFeedback,
+    Keyboard,
+    ScrollView,
+    StyleSheet
+} from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+
+import { useForm, Controller } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { signInSchema } from '../../schemas/authSchemas';
+import { signIn } from '../../api/api';
+
 import InputField from '../../components/InputField';
 import PrimaryButton from '../../components/PrimaryButton';
-import { signIn } from '../../api/api';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import Loader from '../../components/Loader';
 
 export default function SignInScreen() {
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-    const [loading, setLoading] = useState(true);
-    const [errors, setErrors] = useState({});
     const navigation = useNavigation();
 
-    useEffect(() => {
-        async function checkToken() {
-            try {
-                const token = await AsyncStorage.getItem('@access_token');
-                if (token) {
-                    navigation.replace('Home');
-                } else {
-                    setLoading(false);
-                }
-            } catch {
-                setLoading(false);
-            }
-        }
-        checkToken();
-    }, [navigation]);
+    const {
+        control,
+        handleSubmit,
+        formState: { errors, isSubmitting }
+    } = useForm({
+        resolver: zodResolver(signInSchema),
+        defaultValues: { email: '', password: '' }
+    });
 
-
-    if (loading) {
-        return (
-            <View style={styles.loadingContainer}>
-                <ActivityIndicator size="large" color="#2a9d8f" />
-            </View>
-        );
-    }
-
-    const validate = () => {
-        const e = {};
-        let valid = true;
-
-        if (!email.trim()) { e.email = 'Email is required'; valid = false; }
-        if (!password.trim()) { e.password = 'Password is required'; valid = false; }
-        setErrors(e);
-        return valid;
-    };
-
-    const handleSignIn = async () => {
-        if (!validate()) return;
-
+    const onSubmit = async data => {
         try {
-            await signIn({ email, password });
+            await signIn(data);
             navigation.replace('Home');
         } catch (err) {
             const msg = err.response?.data?.message || err.message;
@@ -61,53 +43,64 @@ export default function SignInScreen() {
     };
 
     return (
-        <KeyboardAvoidingView
-            style={styles.flex}
-            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-            keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
-        >
+        <KeyboardAvoidingView behavior="padding" style={{ flex: 1 }}>
+            <Loader visible={isSubmitting} />
+
             <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-                <ScrollView
-                    contentContainerStyle={styles.container}
-                    keyboardShouldPersistTaps="handled"
-                >
-                    <View style={styles.form}>
-                        <InputField
-                            label="Email"
-                            value={email}
-                            onChangeText={setEmail}
-                            placeholder="Enter your email"
-                            error={errors.email}
+                <ScrollView contentContainerStyle={{ padding: 16, flexGrow: 1 }}>
+                    <View style={{ flex: 1, justifyContent: 'center' }}>
+
+                        <Controller
+                            control={control}
+                            name="email"
+                            render={({ field: { value, onChange } }) => (
+                                <InputField
+                                    label="Email"
+                                    value={value}
+                                    onChangeText={onChange}
+                                    placeholder="Enter your email"
+                                    error={errors.email?.message}
+                                />
+                            )}
                         />
 
-                        <InputField
-                            label="Password"
-                            secureTextEntry
-                            value={password}
-                            onChangeText={setPassword}
-                            placeholder="Enter your password"
-                            error={errors.password}
+                        <Controller
+                            control={control}
+                            name="password"
+                            render={({ field: { value, onChange } }) => (
+                                <InputField
+                                    label="Password"
+                                    secureTextEntry
+                                    value={value}
+                                    onChangeText={onChange}
+                                    placeholder="Enter your password"
+                                    error={errors.password?.message}
+                                />
+                            )}
                         />
 
-                        <PrimaryButton title="Sign In" onPress={handleSignIn} />
+                        <PrimaryButton
+                            title="Sign In"
+                            onPress={handleSubmit(onSubmit)}
+                            disabled={isSubmitting}
+                        />
 
-                        <View style={styles.footer}>
-                            <Text style={styles.text}>
-                                Don’t have an account?{' '}
-                                <Text
-                                    style={styles.link}
-                                    onPress={() => navigation.navigate('SignUp')}
-                                >
-                                    Sign Up
-                                </Text>
+                        <Text style={{ textAlign: 'center', marginTop: 24 }}>
+                            Don’t have an account?{' '}
+                            <Text
+                                style={{ color: '#2a9d8f', fontWeight: '600' }}
+                                onPress={() => navigation.navigate('SignUp')}
+                            >
+                                Sign Up
                             </Text>
-                        </View>
+                        </Text>
                     </View>
                 </ScrollView>
             </TouchableWithoutFeedback>
         </KeyboardAvoidingView>
     );
 }
+
 
 const styles = StyleSheet.create({
     flex: { flex: 1 },

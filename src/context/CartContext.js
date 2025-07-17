@@ -1,97 +1,48 @@
-import React, {
-    createContext,
-    useState,
-    useEffect,
-    useContext
-} from 'react';
+import React, { createContext, useState, useEffect, useContext } from 'react';
 import {
-    getCart as apiGetCart,
-    addToCart as apiAddToCart,
-    updateCartItem as apiUpdateCartItem,
-    removeCartItem as apiRemoveCartItem
+    getCart as apiGet,
+    addToCart as apiAdd,
+    updateCartItem as apiUpdate,
+    removeCartItem as apiRemove
 } from '../api/cartApi';
 
 const CartContext = createContext();
 
-/**
- * Cart shape on the server is:
- * {
- *   _id: string,
- *   user: string,
- *   items: [
- *     { product: { _id, name, price, … }, quantity, _id },
- *     …
- *   ],
- *   createdAt, updatedAt, …
- * }
- */
 export function CartProvider({ children }) {
     const [cart, setCart] = useState({ items: [] });
     const [loading, setLoading] = useState(true);
+    const [mutating, setMutating] = useState(false);
 
     useEffect(() => {
-        async function load() {
-            try {
-                const data = await apiGetCart();
-                setCart(data);
-            } catch (err) {
-                console.error('Failed to load cart', err);
-            } finally {
-                setLoading(false);
-            }
-        }
-        load();
+        (async () => {
+            try { setCart(await apiGet()); }
+            finally { setLoading(false); }
+        })();
     }, []);
 
-    const refreshCart = async () => {
-        try {
-            const data = await apiGetCart();
-            setCart(data);
-        } catch (err) {
-            console.error('Failed to refresh cart', err);
-        }
+    const refresh = async () => setCart(await apiGet());
+
+    const addToCart = async (p, q) => {
+        setMutating(true);
+        try { await apiAdd(p, q); await refresh(); }
+        finally { setMutating(false); }
     };
 
-    const handleAdd = async (productId, qty = 1) => {
-        try {
-            await apiAddToCart(productId, qty);
-            await refreshCart();
-        } catch (err) {
-            console.error('Add to cart failed', err);
-            throw err;
-        }
+    const updateQuantity = async (id, q) => {
+        setMutating(true);
+        try { await apiUpdate(id, q); await refresh(); }
+        finally { setMutating(false); }
     };
 
-    const handleUpdate = async (productId, qty) => {
-        try {
-            await apiUpdateCartItem(productId, qty);
-            await refreshCart();
-        } catch (err) {
-            console.error('Update cart item failed', err);
-            throw err;
-        }
-    };
-
-    // 6) remove item
-    const handleRemove = async (productId) => {
-        try {
-            await apiRemoveCartItem(productId);
-            await refreshCart();
-        } catch (err) {
-            console.error('Remove from cart failed', err);
-            throw err;
-        }
+    const removeFromCart = async id => {
+        setMutating(true);
+        try { await apiRemove(id); await refresh(); }
+        finally { setMutating(false); }
     };
 
     return (
         <CartContext.Provider
-            value={{
-                cart,         // always an object with an `items` array
-                loading,
-                addToCart: handleAdd,
-                updateQuantity: handleUpdate,
-                removeFromCart: handleRemove
-            }}
+            value={{ cart, loading, mutating, addToCart, updateQuantity, removeFromCart }}
         >
             {children}
         </CartContext.Provider>

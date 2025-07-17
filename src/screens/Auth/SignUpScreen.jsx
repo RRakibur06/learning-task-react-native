@@ -1,48 +1,40 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
-    StyleSheet,
+    View,
     Alert,
-    Platform,
     KeyboardAvoidingView,
     TouchableWithoutFeedback,
     Keyboard,
-    View
+    StyleSheet
 } from 'react-native';
 import { ScrollView } from 'react-native-gesture-handler';
 import { useNavigation } from '@react-navigation/native';
 
-import InputField from '../../components/InputField';
-import PrimaryButton from '../../components/PrimaryButton';
+import { useForm, Controller } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { signUpSchema } from '../../schemas/authSchemas';
 import { signUp } from '../../api/api';
 
+import InputField from '../../components/InputField';
+import DropDown from '../../components/DropDown';
+import PrimaryButton from '../../components/PrimaryButton';
+import Loader from '../../components/Loader';
 
 export default function SignUpScreen() {
-    const [name, setName] = useState('');
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-    const [errors, setErrors] = useState({});
     const navigation = useNavigation();
 
-    const validate = () => {
-        const e = {};
-        let valid = true;
+    const {
+        control,
+        handleSubmit,
+        formState: { errors, isSubmitting }
+    } = useForm({
+        resolver: zodResolver(signUpSchema),
+        defaultValues: { name: '', email: '', password: '', role: 'buyer' }
+    });
 
-        if (!name.trim()) { e.name = 'Name is required'; valid = false; }
-        if (!email.trim()) { e.email = 'Email is required'; valid = false; }
-        else if (!/^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/.test(email)) {
-            e.email = 'Email is invalid'; valid = false;
-        }
-        if (password.length < 6) { e.password = 'Min 6 characters'; valid = false; }
-
-        setErrors(e);
-        return valid;
-    };
-
-    const handleSignUp = async () => {
-        if (!validate()) return;
-
+    const onSubmit = async data => {
         try {
-            await signUp({ name, email, password });
+            await signUp(data);
             Alert.alert(
                 'Success',
                 'Account created! Please log in.',
@@ -55,43 +47,78 @@ export default function SignUpScreen() {
     };
 
     return (
-        <KeyboardAvoidingView
-            style={styles.flex}
-            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-            keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
-        >
+        <KeyboardAvoidingView behavior="padding" style={{ flex: 1 }}>
+            <Loader visible={isSubmitting} />
+
             <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-                <ScrollView
-                    contentContainerStyle={styles.container}
-                    keyboardShouldPersistTaps="handled"
-                >
-                    <View style={styles.form}>
-                        <InputField
-                            label="Name"
-                            value={name}
-                            onChangeText={setName}
-                            placeholder="Enter your full name"
-                            error={errors.name}
+                <ScrollView contentContainerStyle={{ padding: 16, flexGrow: 1 }}>
+                    <View style={{ flex: 1, justifyContent: 'center' }}>
+
+                        <Controller
+                            control={control}
+                            name="name"
+                            render={({ field: { value, onChange } }) => (
+                                <InputField
+                                    label="Name"
+                                    value={value}
+                                    onChangeText={onChange}
+                                    placeholder="Enter your full name"
+                                    error={errors.name?.message}
+                                />
+                            )}
                         />
 
-                        <InputField
-                            label="Email"
-                            value={email}
-                            onChangeText={setEmail}
-                            placeholder="Enter your email"
-                            error={errors.email}
+                        <Controller
+                            control={control}
+                            name="email"
+                            render={({ field: { value, onChange } }) => (
+                                <InputField
+                                    label="Email"
+                                    value={value}
+                                    onChangeText={onChange}
+                                    placeholder="Enter your email"
+                                    error={errors.email?.message}
+                                />
+                            )}
                         />
 
-                        <InputField
-                            label="Password"
-                            secureTextEntry
-                            value={password}
-                            onChangeText={setPassword}
-                            placeholder="Create a password"
-                            error={errors.password}
+                        <Controller
+                            control={control}
+                            name="password"
+                            render={({ field: { value, onChange } }) => (
+                                <InputField
+                                    label="Password"
+                                    secureTextEntry
+                                    value={value}
+                                    onChangeText={onChange}
+                                    placeholder="Create a password"
+                                    error={errors.password?.message}
+                                />
+                            )}
                         />
 
-                        <PrimaryButton title="Sign Up" onPress={handleSignUp} />
+                        <Controller
+                            control={control}
+                            name="role"
+                            render={({ field: { value, onChange } }) => (
+                                <DropDown
+                                    label="Role"
+                                    items={[
+                                        { label: 'Seller', value: 'seller' },
+                                        { label: 'Buyer', value: 'buyer' }
+                                    ]}
+                                    value={value}
+                                    onValueChange={onChange}
+                                    error={errors.role?.message}
+                                />
+                            )}
+                        />
+
+                        <PrimaryButton
+                            title="Sign Up"
+                            onPress={handleSubmit(onSubmit)}
+                            disabled={isSubmitting}
+                        />
                     </View>
                 </ScrollView>
             </TouchableWithoutFeedback>

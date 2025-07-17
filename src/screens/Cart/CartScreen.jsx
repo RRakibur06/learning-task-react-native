@@ -3,7 +3,6 @@ import {
     View,
     Text,
     FlatList,
-    ActivityIndicator,
     StyleSheet,
     Image,
     TouchableOpacity,
@@ -11,20 +10,19 @@ import {
     Alert
 } from 'react-native';
 import Header from '../../components/Header';
+import Loader from '../../components/Loader';
 import { useCart } from '../../context/CartContext';
 
-export default function CartScreen({ navigation }) {
-    const { cart, loading, updateQuantity, removeFromCart } = useCart();
 
-    if (loading) {
-        return (
-            <View style={styles.loader}>
-                <ActivityIndicator size="large" color="#2a9d8f" />
-            </View>
-        );
+export default function CartScreen({ navigation }) {
+    const { cart, loading, mutating, updateQuantity, removeFromCart } = useCart();
+
+    if (loading || mutating) {
+        return <Loader visible={true} />;
     }
 
     const items = cart.items;
+
 
     if (items.length === 0) {
         return (
