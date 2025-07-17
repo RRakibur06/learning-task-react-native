@@ -29,7 +29,7 @@ export default function SignUpScreen() {
         formState: { errors, isSubmitting }
     } = useForm({
         resolver: zodResolver(signUpSchema),
-        defaultValues: { name: '', email: '', password: '', role: 'buyer' }
+        defaultValues: { name: '', email: '', password: '' }
     });
 
     const onSubmit = async data => {
@@ -93,23 +93,6 @@ export default function SignUpScreen() {
                                     onChangeText={onChange}
                                     placeholder="Create a password"
                                     error={errors.password?.message}
-                                />
-                            )}
-                        />
-
-                        <Controller
-                            control={control}
-                            name="role"
-                            render={({ field: { value, onChange } }) => (
-                                <DropDown
-                                    label="Role"
-                                    items={[
-                                        { label: 'Seller', value: 'seller' },
-                                        { label: 'Buyer', value: 'buyer' }
-                                    ]}
-                                    value={value}
-                                    onValueChange={onChange}
-                                    error={errors.role?.message}
                                 />
                             )}
                         />
