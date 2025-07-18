@@ -10,6 +10,7 @@ export default function InputField({ label, value, onChangeText, placeholder, se
                 value={value}
                 onChangeText={onChangeText}
                 placeholder={placeholder}
+                placeholderTextColor="#888"
                 secureTextEntry={secureTextEntry}
             />
             {error ? <Text style={styles.errorText}>{error}</Text> : null}

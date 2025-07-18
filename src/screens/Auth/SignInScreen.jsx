@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
     View,
     Text,
@@ -19,9 +19,11 @@ import { signIn } from '../../api/api';
 import InputField from '../../components/InputField';
 import PrimaryButton from '../../components/PrimaryButton';
 import Loader from '../../components/Loader';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function SignInScreen() {
     const navigation = useNavigation();
+    const [loading, setLoading] = useState(true);
 
     const {
         control,
@@ -42,9 +44,25 @@ export default function SignInScreen() {
         }
     };
 
+    useEffect(() => {
+        async function checkToken() {
+            try {
+                const token = await AsyncStorage.getItem('@access_token');
+                if (token) {
+                    navigation.replace('Home');
+                } else {
+                    setLoading(false);
+                }
+            } catch {
+                setLoading(false);
+            }
+        }
+        checkToken();
+    }, [navigation]);
+
     return (
         <KeyboardAvoidingView behavior="padding" style={{ flex: 1 }}>
-            <Loader visible={isSubmitting} />
+            <Loader visible={isSubmitting || loading} />
 
             <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
                 <ScrollView contentContainerStyle={{ padding: 16, flexGrow: 1 }}>

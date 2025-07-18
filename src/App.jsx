@@ -9,6 +9,7 @@ import SignUpScreen from './screens/Auth/SignUpScreen';
 import ProductDetailsScreen from './screens/Product/ProductDetailsScreen';
 import CartScreen from './screens/Cart/CartScreen';
 import { CartProvider } from './context/CartContext';
+import OrderHistoryScreen from './screens/Order/OrderHistoryScreen';
 
 const Stack = createStackNavigator();
 
@@ -36,6 +37,7 @@ export default function App() {
               <Stack.Screen name="Home" component={HomeScreen} options={{ headerShown: false }} />
               <Stack.Screen name="ProductDetails" component={ProductDetailsScreen} options={{ title: 'Product Details' }} />
               <Stack.Screen name="Cart" component={CartScreen} options={{ title: 'Your Cart' }} />
+              <Stack.Screen name="OrderHistory" component={OrderHistoryScreen} options={{ title: 'Order History' }} />
             </Stack.Navigator>
           </NavigationContainer>
         </SafeAreaView>

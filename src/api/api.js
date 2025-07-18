@@ -59,7 +59,6 @@ export async function signIn({ email, password }) {
     return response.data;
 }
 
-
 export async function clearAuthTokens() {
     await AsyncStorage.multiRemove([ACCESS_TOKEN_KEY, REFRESH_TOKEN_KEY]);
 }

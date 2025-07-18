@@ -29,7 +29,7 @@ export default function Header() {
         source={require('../../assets/logo.png')} // your logo file
         style={styles.logo}
       /> */}
-            <Text style={styles.heading}>ShopApp</Text>
+            <Text style={styles.heading} onPress={() => navigation.navigate('Home')}>ShopApp</Text>
 
             <View style={styles.right}>
                 <CartIcon />

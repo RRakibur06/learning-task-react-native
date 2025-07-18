@@ -1,9 +1,9 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import {
-    getCart as apiGet,
-    addToCart as apiAdd,
-    updateCartItem as apiUpdate,
-    removeCartItem as apiRemove
+    getCart as apiGetCart,
+    addToCart as apiAddToCart,
+    updateCartItem as apiUpdateCartItem,
+    removeCartItem as apiRemoveCartItem
 } from '../api/cartApi';
 
 const CartContext = createContext();
@@ -13,36 +13,68 @@ export function CartProvider({ children }) {
     const [loading, setLoading] = useState(true);
     const [mutating, setMutating] = useState(false);
 
+    // load on mount
     useEffect(() => {
         (async () => {
-            try { setCart(await apiGet()); }
-            finally { setLoading(false); }
+            try {
+                const data = await apiGetCart();
+                setCart(data);
+            } finally {
+                setLoading(false);
+            }
         })();
     }, []);
 
-    const refresh = async () => setCart(await apiGet());
-
-    const addToCart = async (p, q) => {
-        setMutating(true);
-        try { await apiAdd(p, q); await refresh(); }
-        finally { setMutating(false); }
+    const refreshCart = async () => {
+        const data = await apiGetCart();
+        setCart(data);
     };
 
-    const updateQuantity = async (id, q) => {
+    const addToCart = async (productId, qty) => {
         setMutating(true);
-        try { await apiUpdate(id, q); await refresh(); }
-        finally { setMutating(false); }
+        try {
+            await apiAddToCart(productId, qty);
+            await refreshCart();
+        } finally {
+            setMutating(false);
+        }
     };
 
-    const removeFromCart = async id => {
+    const updateQuantity = async (cartItemId, qty) => {
         setMutating(true);
-        try { await apiRemove(id); await refresh(); }
-        finally { setMutating(false); }
+        try {
+            await apiUpdateCartItem(cartItemId, qty);
+            await refreshCart();
+        } finally {
+            setMutating(false);
+        }
+    };
+
+    const removeFromCart = async (cartItemId) => {
+        setMutating(true);
+        try {
+            await apiRemoveCartItem(cartItemId);
+            await refreshCart();
+        } finally {
+            setMutating(false);
+        }
+    };
+
+    const clearCart = () => {
+        setCart({ items: [] });
     };
 
     return (
         <CartContext.Provider
-            value={{ cart, loading, mutating, addToCart, updateQuantity, removeFromCart }}
+            value={{
+                cart,
+                loading,
+                mutating,
+                addToCart,
+                updateQuantity,
+                removeFromCart,
+                clearCart
+            }}
         >
             {children}
         </CartContext.Provider>
